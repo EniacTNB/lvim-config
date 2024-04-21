@@ -307,6 +307,14 @@ lvim.plugins = {
                         -- :DiffviewRefresh                                     刷新 Diffview
 
                 },
+                {
+                        "f-person/git-blame.nvim",
+                        event = "BufRead",
+                        config = function()
+                                vim.cmd "highlight default link gitblame SpecialComment"
+                                vim.g.gitblame_enabled = 0
+                        end,
+                },
                 -- {
                 --         "zbirenbaum/copilot.lua",
                 --         cmd = "Copilot",
@@ -485,11 +493,143 @@ lvim.plugins = {
                         --  vim.o.timeoutlen = 500
                         -- end
                 },
+                {
+                        "s1n7ax/nvim-window-picker",
+                        lazy = true,
+                        event = { "WinNew" },
+                        config = function()
+                                local picker = require("window-picker")
+                                picker.setup({
+                                        autoselect_one = true,
+                                        include_current = false,
+                                        filter_rules = {
+                                                bo = {
+                                                        filetype = { "neo-tree", "neo-tree-popup", "notify", "quickfix" },
+                                                        buftype = { "terminal" },
+                                                },
+                                        },
+                                        other_win_hl_color = "#e35e4f",
+                                })
+
+                                vim.keymap.set("n", ",w", function()
+                                        local picked_window_id = picker.pick_window({
+                                                include_current_win = true,
+                                        }) or vim.api.nvim_get_current_win()
+                                        vim.api.nvim_set_current_win(picked_window_id)
+                                end, { desc = "Pick a window" })
+
+                                -- Swap two windows using the awesome window picker
+                                local function swap_windows()
+                                        local window = picker.pick_window({
+                                                include_current_win = false,
+                                        })
+                                        local target_buffer = vim.fn.winbufnr(window)
+                                        -- Set the target window to contain current buffer
+                                        vim.api.nvim_win_set_buf(window, 0)
+                                        -- Set current window to contain target buffer
+                                        vim.api.nvim_win_set_buf(0, target_buffer)
+                                end
+
+                                vim.keymap.set("n", ",W", swap_windows, { desc = "Swap windows" })
+                        end,
+                }
+        },
+        {
+                "rcarriga/nvim-notify",
+                lazy = true,
+                event = "VeryLazy",
+                config = function()
+                        local notify = require("notify")
+                        notify.setup({
+                                -- "fade", "slide", "fade_in_slide_out", "static"
+                                stages = "static",
+                                on_open = nil,
+                                on_close = nil,
+                                timeout = 3000,
+                                fps = 1,
+                                render = "default",
+                                background_colour = "Normal",
+                                max_width = math.floor(vim.api.nvim_win_get_width(0) / 2),
+                                max_height = math.floor(vim.api.nvim_win_get_height(0) / 4),
+                                -- minimum_width = 50,
+                                -- ERROR > WARN > INFO > DEBUG > TRACE
+                                level = "TRACE",
+                        })
+
+                        vim.notify = notify
+                end,
+        },
+        {
+                "folke/noice.nvim",
+                enabled = enable_noice,
+                lazy = true,
+                event = "user fileopened",
+                dependencies = { "rcarriga/nvim-notify", "muniftanjim/nui.nvim" },
+                config = function()
+                        require("noice").setup({
+                                lsp = {
+                                        progress = {
+                                                enabled = false,
+                                        },
+                                },
+                                presets = {
+                                        bottom_search = false,
+                                        command_palette = true,
+                                        long_message_to_split = true,
+                                        inc_rename = false,
+                                        lsp_doc_border = true,
+                                },
+                                messages = {
+                                        enabled = true,
+                                        view = "notify",
+                                        view_error = "notify",
+                                        view_warn = "notify",
+                                        view_history = "messages",
+                                        view_search = "virtualtext",
+                                },
+                                health = {
+                                        checker = false,
+                                },
+                        })
+                end,
+        },
+        {
+                "nvim-zh/colorful-winsep.nvim",
+                lazy = true,
+                event = "WinNew",
+                config = function()
+                        require("colorful-winsep").setup()
+                end,
         },
 }
 -- lvim.on_load("telescope.nvim", function()
 --                                         require("telescope").load_extension("projects")
 --                                 end)
+
+-- example mappings you can place in some other place
+-- An awesome method to jump to windows
+-- local picker = require('nvim-window-picker')
+
+-- vim.keymap.set("n", ",w", function()
+--   local picked_window_id = picker.pick_window({
+--     include_current_win = true
+--   }) or vim.api.nvim_get_current_win()
+--   vim.api.nvim_set_current_win(picked_window_id)
+-- end, { desc = "Pick a window" })
+
+-- -- Swap two windows using the awesome window picker
+-- local function swap_windows()
+--   local window = picker.pick_window({
+--     include_current_win = false
+--   })
+--   local target_buffer = vim.fn.winbufnr(window)
+--   -- Set the target window to contain current buffer
+--   vim.api.nvim_win_set_buf(window, 0)
+--   -- Set current window to contain target buffer
+--   vim.api.nvim_win_set_buf(0, target_buffer)
+-- end
+
+-- vim.keymap.set('n', ',W', swap_windows, { desc = 'Swap windows' })
 
 
 lvim.builtin.which_key.mappings["t"] = {
