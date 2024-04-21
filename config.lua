@@ -361,19 +361,153 @@ lvim.plugins = {
                                 vim.g.rnvimr_bw_enable = 1
                         end,
                 },
-                "dhananjaylatkar/cscope_maps.nvim",
-                dependencies = {
-                        "folke/which-key.nvim",
+                {
+                        'ojroques/nvim-lspfuzzy',
+                        dependencies = {
+                                'junegunn/fzf',
+                                'junegunn/fzf.vim'
+                        }
+                },
+                {
+
+                        "dhananjaylatkar/cscope_maps.nvim",
+                        dependencies = {
+                                "folke/which-key.nvim",
+                        },
+                        config = function()
+                                require("cscope_maps").setup({
+                                        disable_maps = false, -- true disables my keymaps, only :Cscope will be loaded
+                                })
+                        end,
+
+                },
+                {
+
                         "nvim-lua/plenary.nvim",
                 },
-                config = function()
-                        require("cscope_maps").setup({
-                                disable_maps = false, -- true disables my keymaps, only :Cscope will be loaded
-                        })
-                end,
+                {
+                        "nvim-telescope/telescope-fzy-native.nvim",
+                        build = "make",
+                        event = "BufRead",
+                },
+                {
+                        "nvim-telescope/telescope-project.nvim",
+                        event = "BufWinEnter",
+                        setup = function()
+                                vim.cmd [[packadd telescope.nvim]]
+                        end,
+                },
+                -- {
+                --  -- Ranger file manager  但我感觉不好用，先注释掉
+                --         "kevinhwang91/rnvimr",
+                --         cmd = "RnvimrToggle",
+                --         config = function()
+                --                 vim.g.rnvimr_draw_border = 1
+                --                 vim.g.rnvimr_pick_enable = 1
+                --                 vim.g.rnvimr_bw_enable = 1
+                --         end,
+                -- },
+                --
+                -- {
+                --         "camspiers/snap",
+                --         rocks = "fzy",
+                --         config = function()
+                --                 local snap = require "snap"
+                --                 local layout = snap.get("layout").bottom
+                --                 local file = snap.config.file:with { consumer = "fzy", layout = layout }
+                --                 local vimgrep = snap.config.vimgrep:with { layout = layout }
+                --                 snap.register.command("find_files", file { producer = "ripgrep.file" })
+                --                 snap.register.command("buffers", file { producer = "vim.buffer" })
+                --                 snap.register.command("oldfiles", file { producer = "vim.oldfile" })
+                --                 snap.register.command("live_grep", vimgrep {})
+                --         end,
+                -- },
+                {
+                        "rmagatti/goto-preview",
+                        config = function()
+                                require('goto-preview').setup {
+                                        width = 120; -- Width of the floating window
+                                        height = 25; -- Height of the floating window
+                                        default_mappings = true; -- Bind default mappings
+                                        debug = false; -- Print debug information
+                                        opacity = nil; -- 0-100 opacity level of the floating window where 100 is fully transparent.
+                                        post_open_hook = nil -- A function taking two arguments, a buffer and a window to be ran as a hook.
+                                        -- You can use "default_mappings = true" setup option
+                                        -- Or explicitly set keybindings
+                                        -- vim.cmd("nnoremap gpd <cmd>lua require('goto-preview').goto_preview_definition()<CR>")
+                                        -- vim.cmd("nnoremap gpi <cmd>lua require('goto-preview').goto_preview_implementation()<CR>")
+                                        -- vim.cmd("nnoremap gP <cmd>lua require('goto-preview').close_all_win()<CR>")
+                                }
+                        end
+                },
+                -- {
+                --         "ahmedkhalf/project.nvim",
+                --         opts = {
+                --                 manual_mode = true,
+                --         },
+                --         event = "VeryLazy",
+                --         config = function(_, opts)
+                --                 require("project_nvim").setup(opts)
+                --                                         end,
+                --         keys = {
+                --                  { "<leader>fp", "<Cmd>Telescope projects<CR>", desc = "Projects" },
+                --         },
+                -- },
+                {
+                        "ray-x/lsp_signature.nvim",
+                        event = "BufRead",
+                        config = function() require"lsp_signature".on_attach() end,
+                },
+                {
+                        "folke/trouble.nvim",
+                        cmd = "TroubleToggle",
+                },
+                {"ellisonleao/glow.nvim", config = true, cmd = "Glow"},
+                {
+                        "folke/todo-comments.nvim",
+                        dependencies = { "nvim-lua/plenary.nvim" },
+                        opts = {
+                                -- your configuration comes here
+                                -- or leave it empty to use the default settings
+                                -- refer to the configuration section below
+                        }
+                },
+                { 'wakatime/vim-wakatime', lazy = false },
+                {
+                        "felipec/vim-sanegx",
+                        event = "BufRead",
+                },
+                {
+                        "tpope/vim-surround",
+
+                        -- make sure to change the value of `timeoutlen` if it's not triggering correctly, see https://github.com/tpope/vim-surround/issues/117
+                        -- setup = function()
+                        --  vim.o.timeoutlen = 500
+                        -- end
+                },
         },
 }
+-- lvim.on_load("telescope.nvim", function()
+--                                         require("telescope").load_extension("projects")
+--                                 end)
 
+
+lvim.builtin.which_key.mappings["t"] = {
+  name = "Diagnostics",
+  t = { "<cmd>TroubleToggle<cr>", "trouble" },
+  w = { "<cmd>TroubleToggle workspace_diagnostics<cr>", "workspace" },
+  d = { "<cmd>TroubleToggle document_diagnostics<cr>", "document" },
+  q = { "<cmd>TroubleToggle quickfix<cr>", "quickfix" },
+  l = { "<cmd>TroubleToggle loclist<cr>", "loclist" },
+  r = { "<cmd>TroubleToggle lsp_references<cr>", "references" },
+}
+
+lvim.builtin.telescope.on_config_done = function(telescope)
+  pcall(telescope.load_extension, "frecency")
+  pcall(telescope.load_extension, "neoclip")
+  pcall(telescope.load_extension, "projects")
+  -- any other extensions loading
+end
 lvim.builtin.treesitter.rainbow.enable = true
 
 lvim.builtin.treesitter.rainbow.extended_mode = true
@@ -419,6 +553,10 @@ lvim.keys.normal_mode["<S-t>"] = ":!cscope -bR && ctags -R<CR>"
 lvim.keys.normal_mode["fs"] = ":Cscope find  s "        -- 手动输入要搜索的关键字, 查找此关键字所有出现的地方
 lvim.keys.normal_mode["ts"] = ":Cscope find  g "        -- 手动输入要搜索的关键字, 查找此关键字定义的地方
 
+-- treesitter自动下载
+lvim.builtin.treesitter.auto_install = true
+-- LSP自动下载
+lvim.lsp.installer.setup.automatic_installation = true
 -- vim.api.nvim_buf_set_keymap(bufnr, "n", "gD", "<cmd>lua vim.lsp.buf.declaration()<CR>", opts)
 --     vim.api.nvim_buf_set_keymap(bufnr, "n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", opts)
 -- ff 搜索光标关键字， gd被luarvim设置成LSP的goto definition，等同于vim的gd
