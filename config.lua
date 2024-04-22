@@ -439,12 +439,20 @@ lvim.plugins = {
                                         default_mappings = true; -- Bind default mappings
                                         debug = false; -- Print debug information
                                         opacity = nil; -- 0-100 opacity level of the floating window where 100 is fully transparent.
-                                        post_open_hook = nil -- A function taking two arguments, a buffer and a window to be ran as a hook.
+                                        post_open_hook = nil;-- A function taking two arguments, a buffer and a window to be ran as a hook.
                                         -- You can use "default_mappings = true" setup option
                                         -- Or explicitly set keybindings
-                                        -- vim.cmd("nnoremap gpd <cmd>lua require('goto-preview').goto_preview_definition()<CR>")
-                                        -- vim.cmd("nnoremap gpi <cmd>lua require('goto-preview').goto_preview_implementation()<CR>")
-                                        -- vim.cmd("nnoremap gP <cmd>lua require('goto-preview').close_all_win()<CR>")
+                                        
+                                        focus_on_open = true; -- Focus the floating window when opening it.
+                                        dismiss_on_move = false; -- Dismiss the floating window when moving the cursor.
+                                        force_close = true, -- passed into vim.api.nvim_win_close's second argument. See :h nvim_win_close
+                                        bufhidden = "wipe", -- the bufhidden option to set on the floating window. See :h bufhidden
+                                        stack_floating_preview_windows = true, -- Whether to nest floating windows
+                                        preview_window_title = { enable = true, position = "left" }, -- Whether to set the preview window title as the filename
+                                        vim.cmd("nnoremap gpd <cmd>lua require('goto-preview').goto_preview_definition()<CR>"),
+                                        vim.cmd("nnoremap gpi <cmd>lua require('goto-preview').goto_preview_implementation()<CR>"),
+                                        vim.cmd("nnoremap gP <cmd>lua require('goto-preview').close_all_win()<CR>"),
+                                        vim.keymap.set("n", "gp", "<cmd>lua require('goto-preview').goto_preview_definition()<CR>", {noremap=true})
                                 }
                         end
                 },
@@ -464,7 +472,15 @@ lvim.plugins = {
                 {
                         "ray-x/lsp_signature.nvim",
                         event = "BufRead",
-                        config = function() require"lsp_signature".on_attach() end,
+                        -- config = function() require"lsp_signature".on_attach() end,
+                        opts = {
+                                vim.keymap.set({ 'n' }, '<C-k>', function()       require('lsp_signature').toggle_float_win()
+                                end, { silent = true, noremap = true, desc = 'toggle signature' }),
+                                vim.keymap.set({ 'n' }, '<Leader>k', function()
+                                        vim.lsp.buf.signature_help()
+                                end, { silent = true, noremap = true, desc = 'toggle signature' }),
+                        },
+                        config = function(_, opts) require'lsp_signature'.setup(opts) end
                 },
                 {
                         "folke/trouble.nvim",
@@ -534,31 +550,31 @@ lvim.plugins = {
                         end,
                 }
         },
-        {
-                "rcarriga/nvim-notify",
-                -- lazy = true,
-                event = "VeryLazy",
-                config = function()
-                        local notify = require("notify")
-                        notify.setup({
-                                -- "fade", "slide", "fade_in_slide_out", "static"
-                                stages = "static",
-                                on_open = nil,
-                                on_close = nil,
-                                timeout = 5000,
-                                fps = 1,
-                                render = "default",
-                                background_colour = "Normal",
-                                max_width = math.floor(vim.api.nvim_win_get_width(0) / 2),
-                                max_height = math.floor(vim.api.nvim_win_get_height(0) / 4),
-                                -- minimum_width = 50,
-                                -- ERROR > WARN > INFO > DEBUG > TRACE
-                                level = "TRACE",
-                        })
+        -- {
+        --         "rcarriga/nvim-notify",
+        --         -- lazy = true,
+        --         event = "VeryLazy",
+        --         config = function()
+        --                 local notify = require("notify")
+        --                 notify.setup({
+        --                         -- "fade", "slide", "fade_in_slide_out", "static"
+        --                         stages = "static",
+        --                         on_open = nil,
+        --                         on_close = nil,
+        --                         timeout = 5000,
+        --                         fps = 1,
+        --                         render = "default",
+        --                         background_colour = "Normal",
+        --                         max_width = math.floor(vim.api.nvim_win_get_width(0) / 2),
+        --                         max_height = math.floor(vim.api.nvim_win_get_height(0) / 4),
+        --                         -- minimum_width = 50,
+        --                         -- ERROR > WARN > INFO > DEBUG > TRACE
+        --                         level = "TRACE",
+        --                 })
 
-                        vim.notify = notify
-                end,
-        },
+        --                 vim.notify = notify
+        --         end,
+        -- },
         -- {
         --         "folke/noice.nvim",
         --         enabled = true,
@@ -599,6 +615,7 @@ lvim.plugins = {
                 event = "VeryLazy",
                 opts = {
                         -- add any options here
+                        -- 'config.lsp.signature.enabled = false',
                 },
                 dependencies = {
                         -- if you lazy-load any plugin below, make sure to add proper `module="..."` entries
