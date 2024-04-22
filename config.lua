@@ -24,12 +24,12 @@ lvim.plugins = {
                 -- <leader>ci	搜索include了光标文件名的所有文件
                 -- <leader>cd	搜索被光标函数调用的函数
                 "kmontocam/nvim-conda",
-                {
-                        "keaising/im-select.nvim",
-                        config = function()
-                                require("im_select").setup({})
-                        end,
-                },
+                -- {
+                --         "keaising/im-select.nvim",
+                --         config = function()
+                --                 require("im_select").setup({})
+                --         end,
+                -- },
                 -- 增加Auto_Session插件，可以在下次打开lvim的时候自动恢复上次关闭的状态
                 {
                         -- 还原窗口布局和打开的文件(利用的是nvim本身的会话功能)
@@ -536,7 +536,7 @@ lvim.plugins = {
         },
         {
                 "rcarriga/nvim-notify",
-                lazy = true,
+                -- lazy = true,
                 event = "VeryLazy",
                 config = function()
                         local notify = require("notify")
@@ -545,7 +545,7 @@ lvim.plugins = {
                                 stages = "static",
                                 on_open = nil,
                                 on_close = nil,
-                                timeout = 3000,
+                                timeout = 5000,
                                 fps = 1,
                                 render = "default",
                                 background_colour = "Normal",
@@ -559,39 +559,55 @@ lvim.plugins = {
                         vim.notify = notify
                 end,
         },
+        -- {
+        --         "folke/noice.nvim",
+        --         enabled = true,
+        --         -- lazy = true,
+        --         event = "user fileopened",
+        --         dependencies = { "rcarriga/nvim-notify", "muniftanjim/nui.nvim" },
+        --         config = function()
+        --                 require("noice").setup({
+        --                         lsp = {
+        --                                 progress = {
+        --                                         enabled = false,
+        --                                 },
+        --                         },
+        --                         presets = {
+        --                                 bottom_search = false,
+        --                                 command_palette = true,
+        --                                 long_message_to_split = true,
+        --                                 inc_rename = false,
+        --                                 lsp_doc_border = true,
+        --                         },
+        --                         messages = {
+        --                                 enabled = true,
+        --                                 view = "notify",
+        --                                 view_error = "notify",
+        --                                 view_warn = "notify",
+        --                                 view_history = "messages",
+        --                                 view_search = "virtualtext",
+        --                         },
+        --                         health = {
+        --                                 checker = false,
+        --                         },
+        --                 })
+        --         end,
+        -- },
+        -- lazy.nvim
         {
                 "folke/noice.nvim",
-                enabled = enable_noice,
-                lazy = true,
-                event = "user fileopened",
-                dependencies = { "rcarriga/nvim-notify", "muniftanjim/nui.nvim" },
-                config = function()
-                        require("noice").setup({
-                                lsp = {
-                                        progress = {
-                                                enabled = false,
-                                        },
-                                },
-                                presets = {
-                                        bottom_search = false,
-                                        command_palette = true,
-                                        long_message_to_split = true,
-                                        inc_rename = false,
-                                        lsp_doc_border = true,
-                                },
-                                messages = {
-                                        enabled = true,
-                                        view = "notify",
-                                        view_error = "notify",
-                                        view_warn = "notify",
-                                        view_history = "messages",
-                                        view_search = "virtualtext",
-                                },
-                                health = {
-                                        checker = false,
-                                },
-                        })
-                end,
+                event = "VeryLazy",
+                opts = {
+                        -- add any options here
+                },
+                dependencies = {
+                        -- if you lazy-load any plugin below, make sure to add proper `module="..."` entries
+                        "MunifTanjim/nui.nvim",
+                        -- OPTIONAL:
+                        --   `nvim-notify` is only needed, if you want to use the notification view.
+                        --   If not available, we use `mini` as the fallback
+                        "rcarriga/nvim-notify",
+                }
         },
         {
                 "nvim-zh/colorful-winsep.nvim",
@@ -696,7 +712,8 @@ lvim.keys.normal_mode["ts"] = ":Cscope find  g "        -- 手动输入要搜索
 -- treesitter自动下载
 lvim.builtin.treesitter.auto_install = true
 -- LSP自动下载
-lvim.lsp.installer.setup.automatic_installation = true
+-- lvim.lsp.installer.setup.automatic_installation = true
+lvim.lsp.installer.setup.automatic_servers_installation = true 
 -- vim.api.nvim_buf_set_keymap(bufnr, "n", "gD", "<cmd>lua vim.lsp.buf.declaration()<CR>", opts)
 --     vim.api.nvim_buf_set_keymap(bufnr, "n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", opts)
 -- ff 搜索光标关键字， gd被luarvim设置成LSP的goto definition，等同于vim的gd
