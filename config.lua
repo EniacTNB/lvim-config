@@ -442,7 +442,7 @@ lvim.plugins = {
                                         post_open_hook = nil;-- A function taking two arguments, a buffer and a window to be ran as a hook.
                                         -- You can use "default_mappings = true" setup option
                                         -- Or explicitly set keybindings
-                                        
+
                                         focus_on_open = true; -- Focus the floating window when opening it.
                                         dismiss_on_move = false; -- Dismiss the floating window when moving the cursor.
                                         force_close = true, -- passed into vim.api.nvim_win_close's second argument. See :h nvim_win_close
@@ -624,6 +624,34 @@ lvim.plugins = {
                         --   `nvim-notify` is only needed, if you want to use the notification view.
                         --   If not available, we use `mini` as the fallback
                         "rcarriga/nvim-notify",
+                        config = function ()
+                                require("noice").setup({
+                                        lsp = {
+                                                -- override markdown rendering so that **cmp** and other plugins use **Treesitter**
+                                                override = {
+                                                        ["vim.lsp.util.convert_input_to_markdown_lines"] = true,
+                                                        ["vim.lsp.util.stylize_markdown"] = true,
+                                                        ["cmp.entry.get_documentation"] = true, -- requires hrsh7th/nvim-cmp
+                                                },
+                                        },
+                                        -- you can enable a preset for easier configuration
+                                        presets = {
+                                                bottom_search = true, -- use a classic bottom cmdline for search
+                                                command_palette = true, -- position the cmdline and popupmenu together
+                                                long_message_to_split = true, -- long messages will be sent to a split
+                                                inc_rename = false, -- enables an input dialog for inc-rename.nvim
+                                                lsp_doc_border = false, -- add a border to hover docs and signature help
+                                        },
+                                        views = {
+                                                split = {
+                                                        enter = true
+                                                },
+                                                messages = {
+                                                        enter = true
+                                                },
+                                        }
+                                })
+                        end,
                 }
         },
         {
@@ -634,6 +662,114 @@ lvim.plugins = {
                         require("colorful-winsep").setup()
                 end,
         },
+        {
+                "kevinhwang91/nvim-ufo",
+                dependencies = {
+                        "kevinhwang91/promise-async",
+                        {
+                                "luukvbaal/statuscol.nvim",
+                                config = function()
+                                        local builtin = require("statuscol.builtin")
+                                        require("statuscol").setup({
+                                                relculright = true,
+                                                segments = {
+                                                        { text = { builtin.foldfunc }, click = "v:lua.ScFa" },
+                                                        { text = { "%s" }, click = "v:lua.ScSa" },
+                                                        { text = { builtin.lnumfunc, " " }, click = "v:lua.ScLa" },
+                                                },
+                                        })
+                                end,
+                        },
+                },
+                event = "BufReadPost",
+                opts = {
+                        provider_selector = function()
+                                return { "treesitter", "indent" }
+                        end,
+                },
+
+                init = function()
+                        vim.keymap.set("n", "zR", function()
+                                require("ufo").openAllFolds()
+                        end)
+                        vim.keymap.set("n", "zM", function()
+                                require("ufo").closeAllFolds()
+                        end)
+                end,
+        },
+        -- Folding preview, by default h and l keys are used.
+        -- On first press of h key, when cursor is on a closed fold, the preview will be shown.
+        -- On second press the preview will be closed and fold will be opened.
+        -- When preview is opened, the l key will close it and open fold. In all other cases these keys will work as usual.
+        { "anuvyklack/fold-preview.nvim", dependencies = "anuvyklack/keymap-amend.nvim", config = true },
+        -- {
+        --         "kevinhwang91/nvim-ufo",
+        --         dependencies = "kevinhwang91/promise-async",
+        --         event = "VimEnter", -- needed for folds to load in time and comments closed
+        --         keys = {
+        --                 -- stylua: ignore start
+        --                 { "zm", function() require("ufo").closeAllFolds() end, desc = "󱃄 Close All Folds" },
+        --                 { "zr", function() require("ufo").openFoldsExceptKinds { "comment", "imports" } end, desc = "󱃄 Open All Regular Folds" },
+        --                 { "zR", function() require("ufo").openFoldsExceptKinds {} end, desc = "󱃄 Open All Folds" },
+        --                 { "z1", function() require("ufo").closeFoldsWith(1) end, desc = "󱃄 Close L1 Folds" },
+        --                 { "z2", function() require("ufo").closeFoldsWith(2) end, desc = "󱃄 Close L2 Folds" },
+        --                 { "z3", function() require("ufo").closeFoldsWith(3) end, desc = "󱃄 Close L3 Folds" },
+        --                 { "z4", function() require("ufo").closeFoldsWith(4) end, desc = "󱃄 Close L4 Folds" },
+        --                 -- stylua: ignore end
+        --         },
+        --         init = function()
+        --                 -- INFO fold commands usually change the foldlevel, which fixes folds, e.g.
+        --                 -- auto-closing them after leaving insert mode, however ufo does not seem to
+        --                 -- have equivalents for zr and zm because there is no saved fold level.
+        --                 -- Consequently, the vim-internal fold levels need to be disabled by setting
+        --                 -- them to 99
+        --                 vim.opt.foldlevel = 99
+        --                 vim.opt.foldlevelstart = 99
+        --         end,
+        --         opts = {
+        --                 provider_selector = function(_, ft, _)
+        --                         -- INFO some filetypes only allow indent, some only LSP, some only
+        --                         -- treesitter. However, ufo only accepts two kinds as priority,
+        --                         -- therefore making this function necessary :/
+        --                         local lspWithOutFolding = { "markdown", "sh", "css", "html", "python" }
+        --                         if vim.tbl_contains(lspWithOutFolding, ft) then return { "treesitter", "indent" } end
+        --                         return { "lsp", "indent" }
+        --                 end,
+        --                 -- when opening the buffer, close these fold kinds
+        --                 -- use `:UfoInspect` to get available fold kinds from the LSP
+        --                 close_fold_kinds_for_ft = {
+        --                         default = { "imports", "comment" },
+        --                 },
+        --                 open_fold_hl_timeout = 800,
+        --                 fold_virt_text_handler = function(virtText, lnum, endLnum, width, truncate)
+        --                         local hlgroup = "NonText"
+        --                         local newVirtText = {}
+        --                         local suffix = "   " .. tostring(endLnum - lnum)
+        --                         local sufWidth = vim.fn.strdisplaywidth(suffix)
+        --                         local targetWidth = width - sufWidth
+        --                         local curWidth = 0
+        --                         for _, chunk in ipairs(virtText) do
+        --                                 local chunkText = chunk[1]
+        --                                 local chunkWidth = vim.fn.strdisplaywidth(chunkText)
+        --                                 if targetWidth > curWidth + chunkWidth then
+        --                                         table.insert(newVirtText, chunk)
+        --                                 else
+        --                                         chunkText = truncate(chunkText, targetWidth - curWidth)
+        --                                         local hlGroup = chunk[2]
+        --                                         table.insert(newVirtText, { chunkText, hlGroup })
+        --                                         chunkWidth = vim.fn.strdisplaywidth(chunkText)
+        --                                         if curWidth + chunkWidth < targetWidth then
+        --                                                 suffix = suffix .. (" "):rep(targetWidth - curWidth - chunkWidth)
+        --                                         end
+        --                                         break
+        --                                 end
+        --                                 curWidth = curWidth + chunkWidth
+        --                         end
+        --                         table.insert(newVirtText, { suffix, hlgroup })
+        --                         return newVirtText
+        --                 end,
+        --         },
+        -- },
 }
 -- lvim.on_load("telescope.nvim", function()
 --                                         require("telescope").load_extension("projects")
@@ -666,20 +802,20 @@ lvim.plugins = {
 
 
 lvim.builtin.which_key.mappings["t"] = {
-  name = "Diagnostics",
-  t = { "<cmd>TroubleToggle<cr>", "trouble" },
-  w = { "<cmd>TroubleToggle workspace_diagnostics<cr>", "workspace" },
-  d = { "<cmd>TroubleToggle document_diagnostics<cr>", "document" },
-  q = { "<cmd>TroubleToggle quickfix<cr>", "quickfix" },
-  l = { "<cmd>TroubleToggle loclist<cr>", "loclist" },
-  r = { "<cmd>TroubleToggle lsp_references<cr>", "references" },
+        name = "Diagnostics",
+        t = { "<cmd>TroubleToggle<cr>", "trouble" },
+        w = { "<cmd>TroubleToggle workspace_diagnostics<cr>", "workspace" },
+        d = { "<cmd>TroubleToggle document_diagnostics<cr>", "document" },
+        q = { "<cmd>TroubleToggle quickfix<cr>", "quickfix" },
+        l = { "<cmd>TroubleToggle loclist<cr>", "loclist" },
+        r = { "<cmd>TroubleToggle lsp_references<cr>", "references" },
 }
 
 lvim.builtin.telescope.on_config_done = function(telescope)
-  pcall(telescope.load_extension, "frecency")
-  pcall(telescope.load_extension, "neoclip")
-  pcall(telescope.load_extension, "projects")
-  -- any other extensions loading
+        pcall(telescope.load_extension, "frecency")
+        pcall(telescope.load_extension, "neoclip")
+        pcall(telescope.load_extension, "projects")
+        -- any other extensions loading
 end
 lvim.builtin.treesitter.rainbow.enable = true
 
@@ -717,6 +853,14 @@ vim.opt.ignorecase = true                       -- 搜索时忽略大小写
 vim.opt.mouse = "a"                             -- 允许lvim使用鼠标操作
 vim.opt.clipboard = "unnamedplus"               -- 使用OS 系统剪贴板
 
+
+--- 用来配置折叠相关配置
+-- UFO folding
+vim.o.foldcolumn = "1" -- '0' is not bad
+vim.o.foldlevel = 99 -- Using ufo provider need a large value, feel free to decrease the value
+vim.o.foldlevelstart = 99
+vim.o.foldenable = true
+vim.o.fillchars = [[eob: ,fold: ,foldopen:,foldsep: ,foldclose:]]
 -- lvim.keys.normal_mode["<C-d>"] = "<C-d>zz"      -- Ctrl-d 将光标下翻半页并将光标行在窗口上下居中
 
 -- cscope_maps 插件优先加载当前目录里的cscope.out, 然后加载与.git同级目录里的cscope.out,当只关注kernel的某个子模块目录时, 可以加速搜索
